@@ -158,24 +158,7 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.grid()
     ax.set_xlabel("Brew Volume (oz.)")
     ax.set_ylabel(r"In Cup  Temp (F)")
-    plt.title("In Cup Temp vs Brew Volume")
-    plt.xlim([0, 8])
-    plt.ylim([80, 190])
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = results_dir + '/Plots/PlotInCupTemps_Base_UBTS.png'
-    fig.savefig(figure_path)  # save the figure to file
-    plt.close(fig)
-
-    fig, ax = plt.subplots()
-    plt.plot(dfs['t268']['Brew Mass (g)_t268'] / 28.3495, dfs['t268']['T in-cup (degF)_t268'],
-             label='Pulse No Pre-Infusion')
-    plt.plot(dfs['t271']['Brew Mass (g)_t271'] / 28.3495, dfs['t271']['T in-cup (degF)_t271'],
-             label='Europa No Pre-Infusion')
-    ax.legend(loc=0)
-    ax.grid()
-    ax.set_xlabel("Brew Volume (oz.)")
-    ax.set_ylabel(r"In Cup  Temp (F)")
-    plt.title("In Cup Temp vs Brew Volume")
+    plt.title("In Cup Temp vs Brew Volume for No Bloom Case")
     plt.xlim([0, 8])
     plt.ylim([80, 190])
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -192,7 +175,7 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.grid()
     ax.set_xlabel("Brew Volume (oz.)")
     ax.set_ylabel(r"In Cup  Temp (F)")
-    plt.title("In Cup Temp vs Brew Volume")
+    plt.title("In Cup Temp vs Brew Volume for 23 mL 45 s 90 C Bloom")
     plt.xlim([0, 8])
     plt.ylim([140, 190])
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
@@ -209,7 +192,7 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.grid()
     ax.set_xlabel("Brew Mass (g)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Brew Volume")
+    plt.title("Entrance Needle Temp vs Brew Volume for 23 mL 45s 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     figure_path = results_dir + '/Plots/PlotENTemps_45s_UBTS.png'
     fig.savefig(figure_path)  # save the figure to file
@@ -224,7 +207,7 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.grid()
     ax.set_xlabel("Brew Mass (g)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Brew Volume")
+    plt.title("Entrance Needle Temp vs Brew Volume for 23 mL 15 s 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     figure_path = results_dir + '/Plots/PlotENTemps_15s_UBTS.png'
     fig.savefig(figure_path)  # save the figure to file
@@ -241,7 +224,7 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.grid()
     ax.set_xlabel("Brew Mass (g)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Brew Volume")
+    plt.title("Entrance Needle Temp vs Brew Volume for 23 mL 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     figure_path = results_dir + '/Plots/PlotENTemps_Europa_UBTS.png'
     fig.savefig(figure_path)  # save the figure to file
@@ -259,7 +242,7 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     plt.xlim([0, 50])
     ax.set_xlabel("Brew Mass (g)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Brew Volume")
+    plt.title("Entrance Needle Temp vs Brew Volume for 23 mL 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
     figure_path = results_dir + '/Plots/PlotENTemps_Europa_UBTS_zoomed.png'
     fig.savefig(figure_path)  # save the figure to file
@@ -276,9 +259,9 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.grid()
     ax.set_xlabel("Time (s)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Time")
+    plt.title("Entrance Needle Temp vs Time for 17 mL 20 s 80 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = results_dir + '/Plots/PlotEntranceTemps_274-276UBTS.png'
+    figure_path = results_dir + '/Plots/PlotEntranceTemps_17mL_80C_UBTS.png'
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
@@ -293,9 +276,9 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.grid()
     ax.set_xlabel("Time (s)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Time")
+    plt.title("Entrance Needle Temp vs Time for 17 mL 20 s 85 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = results_dir + '/Plots/PlotEntranceTemps_277-279UBTS.png'
+    figure_path = results_dir + '/Plots/PlotEntranceTemps_17mL_85C_UBTS.png'
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
@@ -310,9 +293,30 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.grid()
     ax.set_xlabel("Time (s)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Time")
+    plt.title("Entrance Needle Temp vs Time for 17 mL 20 s 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = results_dir + '/Plots/PlotEntranceTemps_280-282UBTS.png'
+    figure_path = results_dir + '/Plots/PlotEN_17mL_90C_UBTS.png'
+    fig.savefig(figure_path)  # save the figure to file
+    plt.close(fig)
+
+    t1 = 't280'
+    t2 = 't281'
+    t3 = 't282'
+    fig, ax = plt.subplots()
+    plt.plot(dfs[t1]['Sample Time (s)_' + t1], dfs[t1]['T entrance needle (degF)_' + t1],
+             label='17ml 20s 90c First Run')
+    plt.plot(dfs[t2]['Sample Time (s)_' + t2], dfs[t2]['T entrance needle (degF)_' + t2],
+             label='17ml 20s 90c Second Run')
+    plt.plot(dfs[t3]['Sample Time (s)_' + t3], dfs[t3]['T entrance needle (degF)_' + t3],
+             label='17ml 20s 90c Third Run')
+    ax.legend(loc=0)
+    ax.grid()
+    plt.xlim([0, 50])
+    ax.set_xlabel("Sample Time (s)")
+    ax.set_ylabel(r"Entrance Needle Temp (F)")
+    plt.title("Entrance Needle Temp vs Time for 17 mL 20 s 90 C Bloom")
+    fig.tight_layout()  # otherwise the right y-label is slightly clipped
+    figure_path = drip_dir + '/PlotEN_17mL_90C_UBTS_zoomed.png'
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
@@ -331,9 +335,9 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     plt.xlim([0, 50])
     ax.set_xlabel("Sample Time (s)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Time")
+    plt.title("Entrance Needle Temp vs Time for 14 mL 20 s 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = drip_dir + '/PlotENTemps_296-298_UBTS_zoomed.png'
+    figure_path = drip_dir + '/PlotENTemps_14ml_90C_UBTS_zoomed.png'
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
@@ -349,9 +353,9 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     plt.xlim([0, 30])
     ax.set_xlabel("Brew Mass (g)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Brew Mass")
+    plt.title("Entrance Needle Temp vs Brew Mass for 14 mL 20 s 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = drip_dir + '/PlotENTemps_296-298vsMass_UBTS_zoomed.png'
+    figure_path = drip_dir + '/PlotENTemps_14ml_90CvsMass_UBTS_zoomed.png'
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
@@ -373,9 +377,9 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     plt.xlim([0, 50])
     ax.set_xlabel("Sample Time (s)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Time")
+    plt.title("Entrance Needle Temp vs Time for 15 mL 20 s 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = drip_dir + '/PlotENTemps_293-295_UBTS_zoomed.png'
+    figure_path = drip_dir + '/PlotENTemps_15ml_90C_UBTS_zoomed.png'
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
@@ -393,30 +397,9 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     plt.xlim([0, 30])
     ax.set_xlabel("Brew Mass (g)")
     ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Brew Mass")
+    plt.title("Entrance Needle Temp vs Brew Mass for 15 mL 20 s 90 C Bloom")
     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = drip_dir + '/PlotENTemps_293-295vsMass_UBTS_zoomed.png'
-    fig.savefig(figure_path)  # save the figure to file
-    plt.close(fig)
-
-    t1 = 't280'
-    t2 = 't281'
-    t3 = 't282'
-    fig, ax = plt.subplots()
-    plt.plot(dfs[t1]['Sample Time (s)_' + t1], dfs[t1]['T entrance needle (degF)_' + t1],
-             label='17ml 20s 90c First Run')
-    plt.plot(dfs[t2]['Sample Time (s)_' + t2], dfs[t2]['T entrance needle (degF)_' + t2],
-             label='17ml 20s 90c Second Run')
-    plt.plot(dfs[t3]['Sample Time (s)_' + t3], dfs[t3]['T entrance needle (degF)_' + t3],
-             label='17ml 20s 90c Third Run')
-    ax.legend(loc=0)
-    ax.grid()
-    plt.xlim([0, 50])
-    ax.set_xlabel("Sample Time (s)")
-    ax.set_ylabel(r"Entrance Needle Temp (F)")
-    plt.title("Entrance Needle Temp vs Time")
-    fig.tight_layout()  # otherwise the right y-label is slightly clipped
-    figure_path = drip_dir + '/PlotENTemps_280-282_UBTS_zoomed.png'
+    figure_path = drip_dir + '/PlotENTemps_15ml_90CvsMass_UBTS_zoomed.png'
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
@@ -494,7 +477,7 @@ def main():
 
                     dfs['t' + str(tests[i])] = df.shift(i).add_suffix('_t' + str(tests[i]))
 
-                    #plottemps(results_dir, UBTS_filename, df)
+                    plottemps(results_dir, UBTS_filename, df)
 
                 # collect bloom variables used in this test using log file
                 elif file[-7:-4] == 'log':
@@ -518,24 +501,19 @@ def main():
                                 brew_size[i - 1] = (float(line_list[-3]))
                     # find the closest datapoint to the 5 seconds after the bloom time for this cycle
                     if (tests[i-1] != 0) and (bloom_times[i-1] != 0):
-                        print('Index: ' + str(i-1))
-                        print('Test Number: ' + str(tests[i-1]))
-                        print('Bloom Time: ' + str(bloom_times[i - 1]))
                         df = dfs['t' + str(tests[i-1])]
                         drip_idx = abs(df['Sample Time (s)_t' + str(tests[i-1])] - (bloom_times[i-1] + 5)).idxmin()
-                        print('Drip IDX: ' +str(drip_idx))
                         # Drip mass is found at the index ~= bloom time + 5 seconds
                         drip_mass = df['Brew Mass (g)_t' + str(tests[i-1])][drip_idx]
                         drip_temp = df['T entrance needle (degF)_t' + str(tests[i-1])][drip_idx]
                         # find the average drip mass around this time
                         avg_drip_mass = df['Brew Mass (g)_t' + str(tests[i-1])].rolling(2).mean()[drip_idx]
-                        print('Drip Mass: '+ str(drip_mass))
-                        print('Drip Temp: '+ str(drip_temp))
-                        print('\n')
                         # if average brew mass at this point is not consistent, enter zero for debugging
                         if not (drip_mass < avg_drip_mass * 1.1) and (drip_mass > avg_drip_mass * 0.9):
                             avg_drip_mass = 0
-                            print('Average Drip Mass Not within Limits, i: ' +str(i) + " tests: " + str(tests[i-1]))
+                            print('Average Drip Mass Not within Limits, idx: ' + str(i) + " test#: " + str(tests[i-1]))
+                            print('Average Drip Mass: ' + str(avg_drip_mass))
+                            print('Local Drip Mass: ' + str(drip_mass))
                         # collect drip volume
                         drip_vols[i-1] = avg_drip_mass
                         drip_temps[i-1] = drip_temp
