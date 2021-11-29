@@ -455,6 +455,7 @@ def main():
     tests = [0] * file_count
     brew_code = [""] * file_count
     drip_vols = [0] * file_count
+    drip_temps = [0] * file_count
     brew_size = [0] * file_count
     js = []
     dfs = {}
@@ -490,20 +491,17 @@ def main():
                     if df['Sample Time (s)'].iloc[-1] == 'Sample Time (s)':
                         print('Dropping last row for file: ' + file)
                         df.drop(df.tail(1).index, inplace=True)  # drop last row
+
                     dfs['t' + str(tests[i])] = df.shift(i).add_suffix('_t' + str(tests[i]))
 
                     #plottemps(results_dir, UBTS_filename, df)
 
-                    Test_UBTS_Data = results_dir + "\\" + str(tests[i]) + ' Data.csv'
-
-                    df.to_csv(Test_UBTS_Data, encoding='utf-8', index=False)
-
                 # collect bloom variables used in this test using log file
                 elif file[-7:-4] == 'log':
+                    js.append(i)
                     parameters = ['Temp:', 'Time:', 'Volume:', 'Size_Selected']
                     # read the log with multiple delimiters
                     with open(UBTS_filename) as fobj:
-                        js.append(i)
                         for line in fobj:
                             line_data = re.split('\t|\n|,|[|]', line)
                             # using list comprehension
@@ -518,7 +516,29 @@ def main():
                             elif parameters[3] in line:
                                 line_list = re.split(':|,| |\t|\n', line)
                                 brew_size[i - 1] = (float(line_list[-3]))
-
+                    # find the closest datapoint to the 5 seconds after the bloom time for this cycle
+                    if (tests[i-1] != 0) and (bloom_times[i-1] != 0):
+                        print('Index: ' + str(i-1))
+                        print('Test Number: ' + str(tests[i-1]))
+                        print('Bloom Time: ' + str(bloom_times[i - 1]))
+                        df = dfs['t' + str(tests[i-1])]
+                        drip_idx = abs(df['Sample Time (s)_t' + str(tests[i-1])] - (bloom_times[i-1] + 5)).idxmin()
+                        print('Drip IDX: ' +str(drip_idx))
+                        # Drip mass is found at the index ~= bloom time + 5 seconds
+                        drip_mass = df['Brew Mass (g)_t' + str(tests[i-1])][drip_idx]
+                        drip_temp = df['T entrance needle (degF)_t' + str(tests[i-1])][drip_idx]
+                        # find the average drip mass around this time
+                        avg_drip_mass = df['Brew Mass (g)_t' + str(tests[i-1])].rolling(2).mean()[drip_idx]
+                        print('Drip Mass: '+ str(drip_mass))
+                        print('Drip Temp: '+ str(drip_temp))
+                        print('\n')
+                        # if average brew mass at this point is not consistent, enter zero for debugging
+                        if not (drip_mass < avg_drip_mass * 1.1) and (drip_mass > avg_drip_mass * 0.9):
+                            avg_drip_mass = 0
+                            print('Average Drip Mass Not within Limits, i: ' +str(i) + " tests: " + str(tests[i-1]))
+                        # collect drip volume
+                        drip_vols[i-1] = avg_drip_mass
+                        drip_temps[i-1] = drip_temp
                 else:
                     js.append(i)
 
@@ -527,6 +547,7 @@ def main():
         del brew_code[j]
         del brew_size[j]
         del drip_vols[j]
+        del drip_temps[j]
         del bloom_temps[j]
         del bloom_vols[j]
         del bloom_times[j]
@@ -535,15 +556,16 @@ def main():
          'Brew Code': brew_code,
          'Brew Size': brew_size,
          'Drip Vol (mL)': drip_vols,
+         'Drip Temp (F)': drip_temps,
          'Bloom Temp (F)': bloom_temps,
          'Bloom Time (s)': bloom_times,
          'Bloom Volume (ml)': bloom_vols,
          }
-    df = pd.DataFrame(data=d)
+    df_stats = pd.DataFrame(data=d)
 
     Brew_Stats = rootdir + "\\" + 'Results' + "\\" + 'Brew Stats.csv'
-    df.to_csv(Brew_Stats, encoding='utf-8', index=False)
-
+    df_stats.to_csv(Brew_Stats, encoding='utf-8', index=False)
+    print(df_stats.iloc[:,3:6])
     # plot all UBTS Cases
     #plot_UBTS_cases_EN(results_dir, dfs)
     #plot_UBTS_cases_ES(results_dir, dfs)
