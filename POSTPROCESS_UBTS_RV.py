@@ -148,136 +148,7 @@ def plot_UBTS_cases_IC(results_dir, dfs):
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
-
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# Main program function
-# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-def main():
-    # Begin timing how long the script takes
-    t0 = time.time()
-    rootdir = r"C:\Users\VIERX716\OneDrive - KDP\Documents\Coffee Bloom\UBTS005\TEMP_PROFILES"
-    # Results Directory
-    results_dir = os.path.join(rootdir, 'Results')
-    # Plots Directory
-    plots_dir = os.path.join(results_dir, 'Plots')
-    drip_dir = os.path.join(plots_dir, 'Drip')
-
-    # Create a Results folder to save images and the files
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
-        print('\nCreating Results Folder: \n')
-
-    else:
-        print('\nResults Folder: \n')
-    print(results_dir)
-
-    if not os.path.exists(plots_dir):
-        os.makedirs(plots_dir)
-    if not os.path.exists(drip_dir):
-        os.makedirs(drip_dir)
-
-    path, dirs, files = next(os.walk(rootdir))
-    file_count = len(files)
-    bloom_temps = [0] * file_count
-    bloom_times = [0] * file_count
-    bloom_vols = [0] * file_count
-    tests = [0] * file_count
-    brew_code = [""] * file_count
-    drip_vols = [0] * file_count
-    brew_size = [0] * file_count
-    js = []
-    dfs = {}
-
-    # step through data directory looking for UBTS files
-    for subdir, dirs, files in os.walk(rootdir):
-
-        if not ((subdir == results_dir) or (subdir == plots_dir) or (subdir == drip_dir)):
-            for i in range(len(files)):
-                file = files[i]
-                UBTS_filename = rootdir + '\\' + file
-
-                if (file[-11:-6] == 'Cycle') or (file[-12:-7] == 'Cycle') or (file[-13:-8] == 'Cycle'):
-                    if file[-7:-4].isnumeric():
-                        number = file[-7:-4]
-                    elif file[-6:-4].isnumeric():
-                        number = file[-6:-4]
-                    else:
-                        number = file[-5:-4]
-                    # Ratchet way to compensate for the fact that sometimes we're missing cases and that's ok
-                    if tests[i - 2] != (int(number) - 1):
-                        skipped_test = True
-                        tests[i] = (int(number) - 1 * 0)
-                    else:
-                        tests[i] = (int(number))
-
-                    df, notes = import_UBTS(UBTS_filename)
-                    if "PULSE" in notes:
-                        brew_code[i] = ['Pulse']
-                    else:
-                        brew_code[i] = ['Europa']
-
-                    if df['Sample Time (s)'].iloc[-1] == 'Sample Time (s)':
-                        print('Dropping last row for file: ' + file)
-                        df.drop(df.tail(1).index, inplace=True)  # drop last row
-                    dfs['t' + str(tests[i])] = df.shift(i).add_suffix('_t' + str(tests[i]))
-
-                    #plottemps(results_dir, UBTS_filename, df)
-
-                    Test_UBTS_Data = results_dir + "\\" + str(tests[i]) + ' Data.csv'
-
-                    df.to_csv(Test_UBTS_Data, encoding='utf-8', index=False)
-
-                # collect bloom variables used in this test using log file
-                elif file[-7:-4] == 'log':
-                    parameters = ['Temp:', 'Time:', 'Volume:', 'Size_Selected']
-                    # read the log with multiple delimiters
-                    with open(UBTS_filename) as fobj:
-                        js.append(i)
-                        for line in fobj:
-                            line_data = re.split('\t|\n|,|[|]', line)
-                            # using list comprehension
-                            # checking if string contains list element
-                            if parameters[0] in line:
-                                line_list = re.split(':|,| |\t|\n', line)
-                                bloom_temps[i - 1] = (float(line_list[-2]))
-                            elif parameters[1] in line:
-                                line_list = re.split(':|,| |\t|\n', line)
-                                bloom_times[i - 1] = (float(line_list[-6]))
-                                bloom_vols[i - 1] = (float(line_list[-2]))
-                            elif parameters[3] in line:
-                                line_list = re.split(':|,| |\t|\n', line)
-                                brew_size[i - 1] = (float(line_list[-3]))
-
-                else:
-                    js.append(i)
-
-    for j in sorted(js, reverse=True):
-        del tests[j]
-        del brew_code[j]
-        del brew_size[j]
-        del drip_vols[j]
-        del bloom_temps[j]
-        del bloom_vols[j]
-        del bloom_times[j]
-
-    d = {'Test Number': tests,
-         'Brew Code': brew_code,
-         'Brew Size': brew_size,
-         'Drip Vol (mL)': drip_vols,
-         'Bloom Temp (F)': bloom_temps,
-         'Bloom Time (s)': bloom_times,
-         'Bloom Volume (ml)': bloom_vols,
-         }
-    df = pd.DataFrame(data=d)
-
-    Brew_Stats = rootdir + "\\" + 'Results' + "\\" + 'Brew Stats.csv'
-    df.to_csv(Brew_Stats, encoding='utf-8', index=False)
-
-    # plot all UBTS Cases
-    #plot_UBTS_cases_EN(results_dir, dfs)
-    #plot_UBTS_cases_ES(results_dir, dfs)
-    #plot_UBTS_cases_IC(results_dir, dfs)
-
+def plot_temp_cases(results_dir, drip_dir, dfs):
     fig, ax = plt.subplots()
     plt.plot(dfs['t268']['Brew Mass (g)_t268']/28.3495, dfs['t268']['T in-cup (degF)_t268'],
              label='Pulse No Pre-Infusion')
@@ -393,7 +264,6 @@ def main():
     figure_path = results_dir + '/Plots/PlotENTemps_Europa_UBTS_zoomed.png'
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
-
 
     fig, ax = plt.subplots()
     plt.plot(dfs['t274']['Sample Time (s)_t274'], dfs['t274']['T entrance needle (degF)_t274'],
@@ -550,6 +420,136 @@ def main():
     fig.savefig(figure_path)  # save the figure to file
     plt.close(fig)
 
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Main program function
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+def main():
+    # Begin timing how long the script takes
+    t0 = time.time()
+    rootdir = r"C:\Users\VIERX716\OneDrive - KDP\Documents\Coffee Bloom\UBTS005\TEMP_PROFILES"
+    # Results Directory
+    results_dir = os.path.join(rootdir, 'Results')
+    # Plots Directory
+    plots_dir = os.path.join(results_dir, 'Plots')
+    drip_dir = os.path.join(plots_dir, 'Drip')
+
+    # Create a Results folder to save images and the files
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+        print('\nCreating Results Folder: \n')
+
+    else:
+        print('\nResults Folder: \n')
+    print(results_dir)
+
+    if not os.path.exists(plots_dir):
+        os.makedirs(plots_dir)
+    if not os.path.exists(drip_dir):
+        os.makedirs(drip_dir)
+
+    path, dirs, files = next(os.walk(rootdir))
+    file_count = len(files)
+    bloom_temps = [0] * file_count
+    bloom_times = [0] * file_count
+    bloom_vols = [0] * file_count
+    tests = [0] * file_count
+    brew_code = [""] * file_count
+    drip_vols = [0] * file_count
+    brew_size = [0] * file_count
+    js = []
+    dfs = {}
+
+    # step through data directory looking for UBTS files
+    for subdir, dirs, files in os.walk(rootdir):
+
+        if not ((subdir == results_dir) or (subdir == plots_dir) or (subdir == drip_dir)):
+            for i in range(len(files)):
+                file = files[i]
+                UBTS_filename = rootdir + '\\' + file
+
+                if (file[-11:-6] == 'Cycle') or (file[-12:-7] == 'Cycle') or (file[-13:-8] == 'Cycle'):
+                    if file[-7:-4].isnumeric():
+                        number = file[-7:-4]
+                    elif file[-6:-4].isnumeric():
+                        number = file[-6:-4]
+                    else:
+                        number = file[-5:-4]
+                    # Ratchet way to compensate for the fact that sometimes we're missing cases and that's ok
+                    if tests[i - 2] != (int(number) - 1):
+                        skipped_test = True
+                        tests[i] = (int(number) - 1 * 0)
+                    else:
+                        tests[i] = (int(number))
+
+                    df, notes = import_UBTS(UBTS_filename)
+                    if "PULSE" in notes:
+                        brew_code[i] = ['Pulse']
+                    else:
+                        brew_code[i] = ['Europa']
+
+                    if df['Sample Time (s)'].iloc[-1] == 'Sample Time (s)':
+                        print('Dropping last row for file: ' + file)
+                        df.drop(df.tail(1).index, inplace=True)  # drop last row
+                    dfs['t' + str(tests[i])] = df.shift(i).add_suffix('_t' + str(tests[i]))
+
+                    #plottemps(results_dir, UBTS_filename, df)
+
+                    Test_UBTS_Data = results_dir + "\\" + str(tests[i]) + ' Data.csv'
+
+                    df.to_csv(Test_UBTS_Data, encoding='utf-8', index=False)
+
+                # collect bloom variables used in this test using log file
+                elif file[-7:-4] == 'log':
+                    parameters = ['Temp:', 'Time:', 'Volume:', 'Size_Selected']
+                    # read the log with multiple delimiters
+                    with open(UBTS_filename) as fobj:
+                        js.append(i)
+                        for line in fobj:
+                            line_data = re.split('\t|\n|,|[|]', line)
+                            # using list comprehension
+                            # checking if string contains list element
+                            if parameters[0] in line:
+                                line_list = re.split(':|,| |\t|\n', line)
+                                bloom_temps[i - 1] = (float(line_list[-2]))
+                            elif parameters[1] in line:
+                                line_list = re.split(':|,| |\t|\n', line)
+                                bloom_times[i - 1] = (float(line_list[-6]))
+                                bloom_vols[i - 1] = (float(line_list[-2]))
+                            elif parameters[3] in line:
+                                line_list = re.split(':|,| |\t|\n', line)
+                                brew_size[i - 1] = (float(line_list[-3]))
+
+                else:
+                    js.append(i)
+
+    for j in sorted(js, reverse=True):
+        del tests[j]
+        del brew_code[j]
+        del brew_size[j]
+        del drip_vols[j]
+        del bloom_temps[j]
+        del bloom_vols[j]
+        del bloom_times[j]
+
+    d = {'Test Number': tests,
+         'Brew Code': brew_code,
+         'Brew Size': brew_size,
+         'Drip Vol (mL)': drip_vols,
+         'Bloom Temp (F)': bloom_temps,
+         'Bloom Time (s)': bloom_times,
+         'Bloom Volume (ml)': bloom_vols,
+         }
+    df = pd.DataFrame(data=d)
+
+    Brew_Stats = rootdir + "\\" + 'Results' + "\\" + 'Brew Stats.csv'
+    df.to_csv(Brew_Stats, encoding='utf-8', index=False)
+
+    # plot all UBTS Cases
+    #plot_UBTS_cases_EN(results_dir, dfs)
+    #plot_UBTS_cases_ES(results_dir, dfs)
+    #plot_UBTS_cases_IC(results_dir, dfs)
+
+    plot_temp_cases(results_dir, drip_dir, dfs)
 
 if __name__ == "__main__":
     main()
