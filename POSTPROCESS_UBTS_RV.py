@@ -410,6 +410,7 @@ def plot_temp_cases(results_dir, drip_dir, dfs):
     ax.legend(loc=0)
     ax.grid()
     plt.xlim([0, 30])
+    plt.ylim([0, 15])
     ax.set_xlabel("Time (s)")
     ax.set_ylabel("Brew Mass (g)")
     plt.title("Brew Mass vs Time for 15 mL 20 s 90 C Bloom")
@@ -455,6 +456,8 @@ def main():
     drip_vols = [0] * file_count
     drip_temps = [0] * file_count
     brew_size = [0] * file_count
+    flow_rate = [0] * file_count
+    flow_rate_command = [0] * file_count
     js = []
     dfs = {}
 
@@ -493,6 +496,53 @@ def main():
                     dfs['t' + str(tests[i])] = df.shift(i).add_suffix('_t' + str(tests[i]))
 
                     plottemps(results_dir, UBTS_filename, df)
+                    t = np.array(df['Sample Time (s)'])
+                    brew_mass = np.array(df['Brew Mass (g)'])
+                    brew_mass_theory = np.array(df['ARxBrewerV (ml)'])
+                    d1 = np.diff(brew_mass) / np.diff(t)
+                    d2 = np.diff(brew_mass_theory) / np.diff(t)
+                    # Take rolling average, with a window size of 3
+                    ret = np.cumsum(d1, dtype=float)
+                    ret2 = np.cumsum(d2, dtype=float)
+                    ret[3:] = ret[3:] - ret[:-3]
+                    ret2[3:] = ret2[3:] - ret2[:-3]
+                    start = [idx for idx, element in enumerate(ret) if (element >= 0.1) and (t[idx] >= 4)]
+                    start2 = [idx for idx, element in enumerate(ret2) if (element >= 0.1) and (t[idx] >= 4)]
+                    idx0 = start[0]
+                    idx2_0 = start2[0]
+                    end = [id for id, element in enumerate(ret) if (element <= 0) and (id > idx0)]
+                    idx_end = end[0]
+                    end2 = [id for id, element in enumerate(ret2) if (element <= 0) and (id > idx2_0)]
+                    idx2_end = end2[0]
+                    drip_volume_t = brew_mass_theory[idx2_end] - brew_mass_theory[idx2_0]
+                    drip_time_t = t[idx_end] - t[idx0]
+                    drip_volume = brew_mass[idx_end] - brew_mass[idx0]
+                    drip_time = t[idx_end] - t[idx0]
+                    flow_rate[i] = 60*drip_volume/drip_time
+                    flow_rate_command[i] = 60 * drip_volume_t / drip_time_t
+                    if tests[i] == 293:
+                        fig, ax = plt.subplots()
+                        d1a = np.append(d1, 0)
+                        avg = np.append(ret, 0)
+                        ax.plot(t, d1a,
+                                 label='Derivative')
+                        ax.plot(t, avg, 'g',
+                                label='Derivative Averaged')
+                        ax.plot(t[idx0], 0.25, 'b*',
+                                label='Start')
+                        ax.plot(t[idx_end], 0.25, 'bd',
+                                label='End')
+                        ax2 = ax.twinx()
+                        ax2.plot(t, brew_mass, 'r',
+                                 label='brew mass')
+                        ax.set_xlim([0, 25])
+                        ax.set_ylim([0, 0.5])
+                        ax2.set_ylim([0, 15])
+                        ax.set_ylabel('Derivative label')
+                        ax2.set_ylabel('Brew Mass label')
+                        ax.legend(loc=0)
+                        fig.show()
+                        ax.grid()
 
                 # collect bloom variables used in this test using log file
                 elif file[-7:-4] == 'log':
@@ -541,6 +591,8 @@ def main():
         del brew_size[j]
         del drip_vols[j]
         del drip_temps[j]
+        del flow_rate[j]
+        del flow_rate_command[j]
         del bloom_temps[j]
         del bloom_vols[j]
         del bloom_times[j]
@@ -550,6 +602,8 @@ def main():
          'Brew Size': brew_size,
          'Drip Vol (mL)': drip_vols,
          'Drip Temp (F)': drip_temps,
+         'Pre-Infusion Flow Rate (mL/min)': flow_rate,
+         'Pre-Infusion Flow Rate Command Avg (mL/min)': flow_rate_command,
          'Bloom Temp (F)': bloom_temps,
          'Bloom Time (s)': bloom_times,
          'Bloom Volume (ml)': bloom_vols,
