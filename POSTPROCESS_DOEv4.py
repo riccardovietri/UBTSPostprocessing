@@ -6,13 +6,20 @@ Created on 11/23/2021
 
 """
 import numpy as np
+
 np.seterr(divide='ignore', invalid='ignore')
+
 import re
 import time
 import pandas as pd
+
+pd.options.mode.chained_assignment = None  # default='warn'
+
 import os
 import matplotlib.pyplot as plt
 from scipy import stats
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Function definition for common utilities
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -22,13 +29,15 @@ def is_float(element) -> bool:
         return True
     except ValueError:
         return False
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # Main program function
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 def main():
     # Begin timing how long the script takes
     t0 = time.time()
-    rootdir = r"C:\Users\VIERX716\OneDrive - KDP\Documents\Coffee Bloom\DOE v4\Pump_Testing"
+    rootdir = r"C:\Users\VIERX716\OneDrive - KDP\Documents\Coffee Bloom\DOE v4\Full"
     # Results Directory
     results_dir = os.path.join(rootdir, 'Results')
     # Plots Directory
@@ -86,17 +95,19 @@ def main():
                     with open(filename) as fobj:
                         prev_time = 0
                         smooth_window = 8
+                        mass_data = True
                         for line in fobj:
                             line_data = re.split('\t|\n|,| |]', line)
                             for j in range(len(line_data)):
-                                if (is_float(line_data[j])):
+                                if is_float(line_data[j]):
                                     try:
                                         prev_time = float(line_data[1][-6:])
                                     except:
-                                        print("Unable to get mass data from file " + str(filename))
-                                        print((line_data[1][-6:]))
+                                        mass_data = False
                                     m_time.append(prev_time)
                                     mass.append(float(line_data[j]))
+                    if not mass_data:
+                        print('No Mass data, file' + str(file))
 
                     try:
                         df_scale = pd.DataFrame({'Time': m_time, 'Mass': mass})
@@ -106,10 +117,10 @@ def main():
                         else:
                             t0 = df_scale.Time[0]
                         df_scale.Time = df_scale.Time - (t0 + 1)
-                        for ii in range(len(df_scale.Time)-1):
-                            if (df_scale.Time[ii+1] < df_scale.Time[ii]-50):
-                                df_scale.Time[ii+1] = df_scale.Time[ii+1]+60
-                        df_scale = df_scale.iloc[1: , :]
+                        for ii in range(len(df_scale.Time) - 1):
+                            if (df_scale.Time[ii + 1] < df_scale.Time[ii] - 50):
+                                df_scale.Time[ii + 1] = df_scale.Time[ii + 1] + 60
+                        df_scale = df_scale.iloc[1:, :]
 
                         x = df_scale.Time.to_numpy()
                         y = df_scale.Mass.to_numpy()
@@ -146,19 +157,20 @@ def main():
                         # https://stackoverflow.com/questions/61815114/deleting-entire-rows-of-a-dataset-for-outliers-found-in-a-single-column
                         dfn_scale_stable = df_scale_stable[(np.abs(stats.zscore(df_scale_stable['Mass_Delta'])) < 3)]
                     except:
-                        print('Failed log file for file: '+str(file))
+                        print('Failed log file for file: ' + str(file))
                         number = '0'
                 # Otherwise the file is part of the labview output
                 elif (file[-4:] == '.lvm'):
                     df = pd.read_csv(filename, sep='\t', skiprows=23, header=0)
                     size_df = len(df.X_Value)
-                    n_time =1+(df.X_Value.max()*1000)
-                    times_NI = np.linspace(0, (1/n_time)*size_df, size_df)
+                    n_time = 1 + (df.X_Value.max() * 1000)
+                    times_NI = np.linspace(0, (1 / n_time) * size_df, size_df)
                     df['Time'] = times_NI
-                    df_nonNAN = df.dropna()
-                    df_nonNAN = df[df['Untitled'].notna()]
-                    t_pump = df_nonNAN.Untitled[0]
-                    pump_t.append(t_pump)
+                    try:
+                        df_nonNAN = df[df['Untitled'].notna()]
+                        t_pump = df_nonNAN.Untitled[0]
+                    except:
+                        t_pump = 0
                     if file[-9:-6].isnumeric():
                         number_NI = file[-9:-6]
                     elif file[-8:-5].isnumeric():
@@ -169,9 +181,15 @@ def main():
                 if not df.empty and (int(number) == int(number_NI)):
                     # Collect dataframe rows with only voltages over 0.1 V
                     non_zero_voltages = df[(df.Voltage > 0.1)]
+                    if non_zero_voltages.empty:
+                        print('No Voltage Pulse Detected, file:'+ str(file))
+                        voltage = 0
+                        voltage_time = 0
+                        ES_temp = 0
+                        EN_temp = 0
                     try:
                         # The time the voltage was nonzero is the difference between the first and last datapoints of the above
-                        voltage_time = non_zero_voltages.Time.iloc[-1]-non_zero_voltages.Time.iloc[0]
+                        voltage_time = non_zero_voltages.Time.iloc[-1] - non_zero_voltages.Time.iloc[0]
                         df.Time = df.Time - non_zero_voltages.Time.iloc[0]
                         df = df[df.Time >= -0.5]
                     except:
@@ -181,20 +199,24 @@ def main():
                     voltage = non_zero_voltages.Voltage.mean()
 
                     try:
-                        EN_temp = non_zero_voltages.Temperature.mean()
-                        ES_temp = non_zero_voltages.Temperature_0.mean()
+                        EN_temp = non_zero_voltages.Temperature.mean() + 6.4
+                        ES_temp = non_zero_voltages.Temperature_0.mean() + 6.6
                     except:
                         try:
-                            EN_temp = non_zero_voltages.T1.mean()
-                            ES_temp = non_zero_voltages.T2.mean()
+                            EN_temp = non_zero_voltages.T1.mean() + 6.4
+                            ES_temp = non_zero_voltages.T2.mean() + 6.6
                         except:
-                            EN_temp = 0
-                            ES_temp = 0
+                            try:
+                                EN_temp = non_zero_voltages.T1.mean() + 6.4
+                                ES_temp = non_zero_voltages.T2.mean() + 6.6
+                            except:
+                                EN_temp = 0
+                                ES_temp = 0
 
                     # Collect rows of dataframe where the mass and the change in mass were positive
-                    non_zero_mass = df_scale.loc[(df_scale['Mass']>=0) & (df_scale['Mass_Delta'] > 0)]
-                    #mass_time = non_zero_mass.Time.iloc[-1] - non_zero_mass.Time.iloc[0]
-                    #Final_Mass = non_zero_mass.Smooth_Mass.iloc[-1]
+                    non_zero_mass = df_scale.loc[(df_scale['Mass'] >= 0) & (df_scale['Mass_Delta'] > 0)]
+                    # mass_time = non_zero_mass.Time.iloc[-1] - non_zero_mass.Time.iloc[0]
+                    # Final_Mass = non_zero_mass.Smooth_Mass.iloc[-1]
 
                     # Filter out results where the gradient and difference between mass data are two high
                     df_scale_f1 = df_scale[df_scale['Mass_Gradient'].between(-0.01, 0.01)]
@@ -202,57 +224,41 @@ def main():
                     df_scale_resetidx = df_scale_f2.reset_index()
                     # Take the difference between each row in filtered df
                     df_f2 = df_scale_f2.diff(axis=0)
-                    #df_f2 = df_f2.dropna()
                     # Sort in descedning order to find largest jump in mass
                     df_f2_sorted = df_f2.sort_values(by=['Mass'], ascending=False)
 
-                    end_idx = df_f2_sorted.index[0]
-                    idx_list = df_scale_resetidx.index[df_scale_f2.index == end_idx].tolist()
-                    begin_idx = df_scale_resetidx['index'][idx_list[0]-1]
-                    end_mass = df_scale.Mass[end_idx]
-                    #end_mass_time = df_scale.Time[end_idx]
-                    # Drip mass is found at the index ~= bloom time + 5 seconds
-                    initial_mass = df_scale['Mass'][begin_idx]
-                    pump_flow_rate = (end_mass - initial_mass)/(df_scale.Time[end_idx] - df_scale['Time'][begin_idx])
+                    try:
+                        end_idx = df_f2_sorted.index[0]
+                        idx_list = df_scale_resetidx.index[df_scale_f2.index == end_idx].tolist()
+                        end_mass = df_scale.Mass[end_idx]
+                    except:
+                        end_idx = 2
+                        end_mass = 0
+                    try:
+                        begin_idx = df_scale_resetidx['index'][idx_list[0] - 1]
+                        initial_mass = df_scale['Mass'][begin_idx]
+                    except:
+                        begin_idx = 1
+                        initial_mass = 0
 
-                    '''
-                    print("Test")
-                    print(number)
-                    print("Final Mass")
-                    print(Final_Mass)
-                    print("Mass At End of Pump Flow")
-                    print(end_mass)
-                    print("Mass at Beginning of Pump Flow")
-                    print(initial_mass)
-                    print("Pump Flow Rate (mL/s)")
-                    print("{:.2f}".format(pump_flow_rate))
-                    print("Pump Flow Rate (mL/min)")
-                    print("{:.2f}".format(pump_flow_rate*60))
-                    print("Average Pump Voltage")
-                    print("{:.2f}".format(voltage))
-                    print("Time change in voltage")
-                    print("{:.2f}".format(voltage_time))
-                    '''
                     # Collect pertinent data
                     if (int(number) not in tests):
                         tests.append(int(number))
                         voltages.append(voltage)
                         voltage_times.append(voltage_time)
-                        pump_flow_rates.append(pump_flow_rate*60)
+                        pump_flow_rates.append(pump_flow_rate * 60)
                         final_masses.append(end_mass)
                         initial_masses.append(initial_mass)
-                        pump_flow_times.append((df_scale.Time[end_idx] - df_scale['Time'][begin_idx]))
-                        pump_flow_over_v.append(pump_flow_rate*60/voltage)
                         EN_temps.append(EN_temp)
                         ES_temps.append(ES_temp)
+                        pump_t.append(t_pump)
 
                     try:
                         t0_mass = df_scale_stable.Time[begin_idx]
                         df_scale_stable.Time = df_scale_stable.Time - (t0_mass)
-                        df_scale_stable = df_scale_stable[df_scale_stable.Time>0]
+                        df_scale_stable = df_scale_stable[df_scale_stable.Time > 0]
                     except:
                         print('Non-zeros mass time')
-
 
                     fig, ax = plt.subplots()
                     color = 'tab:red'
@@ -263,9 +269,9 @@ def main():
 
                     ax2 = ax.twinx()
                     lns2 = ax2.plot(df_scale_stable.Time, df_scale_stable.Mass, label='Mass', color='blue')
-                    #lns3 = ax2.plot(df_scale_stable.Time, df_scale_stable.Mass,  label='Mass', color='green')
+                    # lns3 = ax2.plot(df_scale_stable.Time, df_scale_stable.Mass,  label='Mass', color='green')
                     # added these three lines
-                    #labs = [l.get_label() for l in lns]
+                    # labs = [l.get_label() for l in lns]
                     ax.legend(loc=1)
                     ax2.legend(loc=4)
                     color = 'tab:blue'
@@ -275,27 +281,25 @@ def main():
                     ax.grid()
                     plt.title("Temp vs Brew Mass - Test " + str(number))
                     fig.tight_layout()  # otherwise the right y-label is slightly clipped
-                    figure_path = plots_dir + '\Test' + str(number)+'.png'
+                    figure_path = plots_dir + '\Test' + str(number) + '.png'
                     fig.savefig(figure_path)  # save the figure to file
                     plt.close(fig)
 
     d = {'Test Number': tests,
          'Pump Voltage (V)': voltages,
-         'Pump Flow Rate (ml/min)': pump_flow_rates,
-         'Pump Flow Per volt (mL/min*V)': pump_flow_over_v,
          'Initial Cup Mass (g)': initial_masses,
          'Final Cup Mass (g)': final_masses,
          'Voltage Time (s)': voltage_times,
-         'Pump Flow Time (s)': pump_flow_times,
          'Pump Specified Flow Time (s)': pump_t,
          'EN Temp (F)': EN_temps,
          'ES Temp (F)': ES_temps
          }
 
     df_stats = pd.DataFrame(data=d)
-    Pump_stats = results_dir + "\\" + 'Pump Stats.csv'
+    Pump_stats = results_dir + "\\" + 'DOEv4 Stats.csv'
     df_stats.to_csv(Pump_stats, encoding='utf-8', index=False)
     print(df_stats)
+
 
 if __name__ == "__main__":
     main()
